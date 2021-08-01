@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Alert,TouchableOpacity,SafeAreaView,StatusBar,ActionSheetIOS,StyleSheet,ScrollView,Button, Text, View } from 'react-native';
+import { Image,Alert,TouchableOpacity,SafeAreaView,StatusBar,ActionSheetIOS,StyleSheet,ScrollView,Button, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -27,7 +27,6 @@ const App=()=> {
       });
       
       setData(currResult);
-      console.log(data);
     } catch (error) {
       console.error(error)
     }
@@ -36,7 +35,6 @@ const App=()=> {
 
     if (retrieve) {
       fetchAllSavedRecipes();
-      console.log(data);
     } 
     setRetrieve(false);
   },[retrieve]);
@@ -45,7 +43,6 @@ const App=()=> {
     try {
       await AsyncStorage.removeItem(key);
     } catch (e) { }
-    console.log("Deleted");
   }
   async function storeData(key,value) {
     try {
@@ -71,7 +68,7 @@ const App=()=> {
       await AsyncStorage.mergeItem(key,jsonValue);
       return true;
     } catch (e) {
-      console.log(e);
+
     }
   };
   async function clearData() {
@@ -82,7 +79,6 @@ const App=()=> {
     
     catch (e) {
 
-      console.log(e);
     }
   };
 
@@ -107,20 +103,22 @@ const App=()=> {
       var val = await getData(item.name);
       await mergeData(item.name,item);
       if (!val) {
-        console.log("Storing Item");
         await storeData(item.name,item); 
       }
       
     } catch (e) {
-      console.log(e);
       
     } finally {setRetrieve(true)};
   };
   function DetailsScreen({route,navigation}) {
     const {itemID,otherParam} = route.params;
     return (
-      <View style={styles.leftContainer}>
+      <SafeAreaView>
+      <ScrollView style={styles.scrollView}>
         <Text style={styles.detailTitle}>{otherParam["name"]}</Text>
+        <Image source={{
+          uri: otherParam["imageURL"],
+        }}/>
         <Text style = {styles.itemSubtitle}>Total: {otherParam["timers"].map(datum => datum).reduce((a, b) => a + b)} minutes</Text>
         <Text style = {styles.itemSubtitle}>Ingredients</Text>
         {otherParam["ingredients"].map((ingredient,index) => (
@@ -132,18 +130,16 @@ const App=()=> {
           <Text>{index+1}. {step} ({otherParam["timers"][index]} minutes)</Text>
           
         ))}
-        <TouchableOpacity
-            style={styles.button}
-            onPress={() =>(saveRecipe(otherParam))}
-          ><Text><FontAwesome name="heart" size={24} color="tomato" /></Text></TouchableOpacity>
-      </View>
+        
+      </ScrollView>
+      </SafeAreaView>
     );
   }
   
   function HomeScreen({ navigation }) {
     
     return (
-      <View style={styles.centerContainer}>
+      <View>
         {/* <Button
           title="Go to Details"
           onPress={() => navigation.navigate('Details')}
@@ -197,9 +193,8 @@ const App=()=> {
     }
     return (
       <View>
-        <ScrollView>
+        <ScrollView style={styles.scrollView}>
         {data.map((item,index) => {
-          console.log(item["recipe"]["imageURL"])
           return (
             <Card key={item["name"]}>
              <View>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Image,Alert,TouchableOpacity,SafeAreaView,StatusBar,ActionSheetIOS,StyleSheet,ScrollView,Button, Text, View } from 'react-native';
+import { SectionList,Image,Alert,TouchableOpacity,SafeAreaView,StatusBar,ActionSheetIOS,StyleSheet,ScrollView, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -8,11 +8,10 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useEffect,useState } from 'react';
 import * as SQLite from 'expo-sqlite';
 import recipe from "./data/recipe.json"
-import {Card} from 'react-native-elements';
+import {Card,Button} from 'react-native-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-
+import { styles } from './style' 
 const App=()=> {
   const [data, setData] = useState([]);
   const [retrieve, setRetrieve] = useState(false);
@@ -94,7 +93,9 @@ const App=()=> {
       } else {
         // delete this item from the asyncstorage and set retrieve to true to reset data
         deleteData(itemKey);
-        setRetrieve(true);
+          // setRetrieve(true);
+          var newData = data.filter(v=>v.name!=itemKey);
+          setData(newData);
       }
     })
   }
@@ -104,17 +105,33 @@ const App=()=> {
       await mergeData(item.name,item);
       if (!val) {
         await storeData(item.name,item); 
+        var newData = data.concat({
+          "name":item.name,
+          "recipe":item
+        });
+        setData(newData);
+
       }
       
     } catch (e) {
       
-    } finally {setRetrieve(true)};
+    } finally {
+      
+      //setRetrieve(true);
+    };
+  };
+  
+  const handleScroll = (event) => {
+    const positionX = event.nativeEvent.contentOffset.x;
+    const positionY = event.nativeEvent.contentOffset.y;
+    console.log(positionY);
   };
   function DetailsScreen({route,navigation}) {
     const {itemID,otherParam} = route.params;
     return (
       <SafeAreaView>
-      <ScrollView style={styles.scrollView}>
+          
+      <ScrollView style={styles.scrollView} onScrollEndDrag={handleScroll}>
         <Text style={styles.detailTitle}>{otherParam["name"]}</Text>
         <Image source={{
           uri: otherParam["imageURL"],
@@ -134,7 +151,9 @@ const App=()=> {
       </ScrollView>
       </SafeAreaView>
     );
-  }
+  };
+
+  
   
   function HomeScreen({ navigation }) {
     
@@ -145,30 +164,36 @@ const App=()=> {
           onPress={() => navigation.navigate('Details')}
         /> */}
          <SafeAreaView>
-         <ScrollView style={styles.scrollView}>
+           <SectionList
+           sections={data}>
+
+           </SectionList>
+         <ScrollView style={styles.scrollView} onScrollEndDrag={handleScroll}>
         
           {recipe.map((item,index) =>  {
             const saved = data.find(v => v.name === item.name);
             const iconName = saved ? 'heart':'heart-o';
             return (
-              <Card key={item["name"]}>
+              <Card key={item["name"]} containerStyle={styles.cardContainer}>
              <View>
+             <Card.Image containerStyle={styles.cardImage} source={{
+          uri: item["imageURL"],
+        }}/>
+        <Card.Divider></Card.Divider>
                 <View style={styles.leftContainer}>
               <Card.Title className="item-title">{item["name"]}</Card.Title>
    </View>
-   <Card.Image source={{
-          uri: item["imageURL"],
-        }}/>
+   
               <View style={styles.fixToText}>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonHeart}
             onPress={() =>( saved?confirmCancelSave(item.name):saveRecipe(item))}
           ><Text><FontAwesome name={iconName} size={18} color="tomato" /></Text></TouchableOpacity>
            <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonReadMore}
             onPress={() => navigation.navigate(
               "Details",{itemId:index,otherParam:item}
-            )}><Text>Read</Text></TouchableOpacity>
+            )}><Text style={{color:'white'}}>Read</Text></TouchableOpacity>
             </View>
   
             </View>
@@ -207,12 +232,12 @@ const App=()=> {
 
               <View style={styles.fixToText}>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonHeart}
             onPress={() => (confirmCancelSave(item["name"]))}
           ><Text><FontAwesome name="heart" size={18} color="tomato" 
           /></Text></TouchableOpacity>
            <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonReadMore}
             onPress={() => navigation.navigate(
               "Details",{itemId:index,otherParam:item["recipe"]}
             )}><Text>Read</Text></TouchableOpacity>
@@ -283,53 +308,5 @@ const App=()=> {
   );
 };
 
-const styles = StyleSheet.create({
-  centerContainer: 
-  { flex: 1, justifyContent: 'center', 
-  alignItems: 'center',
-  textAlign:"center"},
 
-  leftContainer: 
-  { flex: 1, justifyContent: "flex-start", 
-  alignItems: 'flex-start',
-  textAlign:"left",
-  paddingHorizontal:10},
-
-  container: {
-    flex: 1,
-    paddingTop: StatusBar.currentHeight+10,
-    marginTop:10,
-  },
-  scrollView: {
-    marginHorizontal: 10,
-  },
-  detailTitle:{
-    fontWeight:'bold',
-    alignSelf:"center",
-  },itemTitle:{
-    fontWeight:'bold',
-    alignSelf:"flex-start",
-  },
-  itemSubtitle:{
-    fontSize:15,
-    alignSelf:"flex-start",
-    color:"tomato",
-  },
-  text: {
-    textAlign:"left",
-    fontSize: 10,
-  },
-  fixToText: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding:10,
-  },
-  
-  button: {
-    alignItems: "center",
-    alignSelf:"center",
-    backgroundColor: "#DDDDDD",
-    padding: 10
-  },
-});
 export default App;

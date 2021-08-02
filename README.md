@@ -16,3 +16,11 @@
 3. Card (react-native-elements)
 4. FontAwesome,Ionicons (@expo/vector-icons)
 
+#Need Modification
+## structure
+1. Update to SectionList instead of using ScrollView
+2. Right now the screen refreshes after making changes to "Favorited" items. 
+Maybe make two hooks, one keep track of all items,
+one keep track of favorited items.
+3. Move to AWS online datastore. Then think about how to use async storage to update 
+## styles

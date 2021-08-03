@@ -11,10 +11,62 @@ import {Card} from 'react-native-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { styles,buttons,textStyles } from './style' 
+
+
+const Item = ({item,onPress}) => {
+
+  const timeTotal = item.timers.reduce((totalTime, i) => totalTime + i, 0);
+  const timeDisplay = Math.round(timeTotal>=60?(timeTotal/60):timeTotal);
+  const timeUnit = timeTotal>=60?"hr":"min";
+
+  return (
+    <TouchableOpacity onPress={onPress}>
+  <Card key={item.name} containerStyle={styles.cardContainer}>
+  <View>
+    <View className="card-image-text" style={styles.fixToText}>
+    <View style={{flex:4}}>
+  <Image defaultSource={require("./default_food_img.jpg")} source={{
+uri: item["imageURL"]}} style={styles.cardImage}/>
+</View>
+<View  className="card-text"  style={{flex:3}}>
+   <Text style={styles.cardRecipeTitle} className="recipe-title">{item["name"]}</Text>
+   <View style={styles.cardRecipeDescription}>
+          <Text>
+            {"\n"}
+          <Ionicons name="time-outline" size={15} color="black" /> {timeDisplay} {timeUnit}
+          </Text>
+        </View>
+   </View>
+  
+</View>
+
+
+   
+
+ </View>
+ </Card>
+ </TouchableOpacity>)
+  
+};
+const renderItem = ({item},navigation) => {
+  return (<Item key={item.name} item={item.recipe} 
+    onPress={()=>(navigation.navigate("Details",{
+        itemID:item.name,otherParam:item.recipe}))}></Item>)
+};
+
+const renderHomeItem = ({item},navigation) => {
+
+  return (<Item key={item.name} item={item} onPress={()=>(navigation.navigate("Details",{
+      itemID:item.name,otherParam:item}))}></Item>)
+  
+
+}
+
+
 const App=()=> {
   const [data, setData] = useState([]);
   const [retrieve, setRetrieve] = useState(false);
-
+  const [scrollPosition,setScrollPosition]=React.useState(0)
 
   const fetchAllSavedRecipes = async () => {
     try {
@@ -117,51 +169,9 @@ const App=()=> {
     };
   };
   
-  const handleScroll = (event) => {
-    const positionX = event.nativeEvent.contentOffset.x;
-    const positionY = event.nativeEvent.contentOffset.y;
-    console.log(positionY);
-  };
-  const Item = ({item,onPress}) => {
+ 
 
-    const timeTotal = item.timers.reduce((totalTime, i) => totalTime + i, 0);
-    const timeDisplay = Math.round(timeTotal>=60?(timeTotal/60):timeTotal);
-    const timeUnit = timeTotal>=60?"hr":"min";
-
-    return (
-      <TouchableOpacity onPress={onPress}>
-    <Card key={item.name} containerStyle={styles.cardContainer}>
-    <View>
-      <View className="card-image-text" style={styles.fixToText}>
-      <View style={{flex:4}}>
-    <Image defaultSource={require("./default_food_img.jpg")} source={{
- uri: item["imageURL"]}} style={styles.cardImage}/>
-</View>
-<View  className="card-text"  style={{flex:3}}>
-     <Text style={styles.cardRecipeTitle} className="recipe-title">{item["name"]}</Text>
-     <View style={styles.cardRecipeDescription}>
-            <Text>
-              {"\n"}
-            <Ionicons name="time-outline" size={15} color="black" /> {timeDisplay} {timeUnit}
-            </Text>
-          </View>
-     </View>
-    
-</View>
-
-
-     
-
-   </View>
-   </Card>
-   </TouchableOpacity>)
-    
-  };
-  const renderItem = ({item},navigation) => {
-    return (<Item item={item.recipe} 
-      onPress={()=>(navigation.navigate("Details",{
-          itemID:item.name,otherParam:item.recipe}))}></Item>)
-  };
+ 
   function DetailsScreen({route,navigation}) {
     const {itemID,otherParam} = route.params;
     const favorited = data.find(v=>v.name===itemID)!=null;
@@ -243,22 +253,25 @@ const App=()=> {
   };
 
 
-const renderHomeItem = ({item},navigation) => {
 
-  return (<Item item={item} onPress={()=>(navigation.navigate("Details",{
-      itemID:item.name,otherParam:item}))}></Item>)
-  
-
+const handleScroll=(event)=>{
+  let yOffset=event.nativeEvent.contentOffset.y / 200;
 }
+const getItemLayOut = ({data,idnex}) => (
+  { length: 150, offset: 150 * index, index })
+
+
   function HomeScreen({ navigation }) {
     
     return (
        
          <SafeAreaView>
-        <FlatList
+        <FlatList 
+        onScroll={(event)=>handleScroll(event)}
+          removeClippedSubviews={true}
         data={recipe}
         renderItem={(item)=>renderHomeItem(item,navigation)}
-        keyExtractor={(item)=>item.name}
+        keyExtractor={(item)=>item.name}        
         ></FlatList>
       </SafeAreaView>
     );

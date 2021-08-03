@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Image,ActivityIndicator,FlatList,SectionList,Alert,TouchableOpacity,SafeAreaView,StatusBar,ActionSheetIOS,StyleSheet,ScrollView, Text, View } from 'react-native';
+import { ImageBackground,Image,ActivityIndicator,FlatList,SectionList,Alert,TouchableOpacity,SafeAreaView,StatusBar,ActionSheetIOS,StyleSheet,ScrollView, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -13,9 +13,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { styles,buttons,textStyles } from './style' 
 const App=()=> {
   const [data, setData] = useState([]);
-
   const [retrieve, setRetrieve] = useState(false);
-  
+
+
   const fetchAllSavedRecipes = async () => {
     try {
       const keys = await AsyncStorage.getAllKeys();
@@ -39,6 +39,10 @@ const App=()=> {
     setRetrieve(false);
   },[retrieve]);
 
+  useEffect(() => {
+    fetchAllSavedRecipes();
+  },[])
+
   async function deleteData(key) {
     try {
       await AsyncStorage.removeItem(key);
@@ -56,8 +60,8 @@ const App=()=> {
   };
   async function getData(key) {
     try {
-      const jsonValue = await AsyncStorage.getItem(key)
-      return jsonValue != null ? JSON.parse(jsonValue) : null;
+      const jsonValue = await AsyncStorage.getItem(key);
+      return jsonValue!=null? jsonValue: null;
     } catch(e) {
       return false;
     }
@@ -109,8 +113,7 @@ const App=()=> {
     } catch (e) {
       
     } finally {
-      setRetrieve(true);
-      
+      setRetrieve(true);      
     };
   };
   
@@ -120,18 +123,17 @@ const App=()=> {
     console.log(positionY);
   };
   const Item = ({item,onPress}) => {
-    const saved = data.find(v => v.name === item.name);
-    const iconName = saved ? 'heart':'heart-o';
+
     const timeTotal = item.timers.reduce((totalTime, i) => totalTime + i, 0);
-    const timeDisplay = Math.round(timeTotal>60?(timeTotal/60):timeTotal);
-    const timeUnit = timeTotal>60?"hr":"min";
+    const timeDisplay = Math.round(timeTotal>=60?(timeTotal/60):timeTotal);
+    const timeUnit = timeTotal>=60?"hr":"min";
 
     return (
       <TouchableOpacity onPress={onPress}>
     <Card key={item.name} containerStyle={styles.cardContainer}>
     <View>
       <View className="card-image-text" style={styles.fixToText}>
-      <View className="imageMask" style={{flex:2}}>
+      <View style={{flex:4}}>
     <Image defaultSource={require("./default_food_img.jpg")} source={{
  uri: item["imageURL"]}} style={styles.cardImage}/>
 </View>
@@ -144,12 +146,7 @@ const App=()=> {
             </Text>
           </View>
      </View>
-     <View style={{flex:1}}>
-<TouchableOpacity
-   style={buttons.heart}
-   onPress={() =>( saved?confirmCancelSave(item.name):saveRecipe(item))}
-   ><Text><FontAwesome name={iconName} size={18} color="#111127" /></Text></TouchableOpacity>
-</View>
+    
 </View>
 
 
@@ -161,32 +158,40 @@ const App=()=> {
     
   };
   const renderItem = ({item},navigation) => {
-    return (<Item item={item.recipe} onPress={() => navigation.navigate(
-      "Details",{itemID:item.name,otherParam:item.recipe}
-    )}></Item>)
+    return (<Item item={item.recipe} 
+      onPress={()=>(navigation.navigate("Details",{
+          itemID:item.name,otherParam:item.recipe}))}></Item>)
   };
   function DetailsScreen({route,navigation}) {
     const {itemID,otherParam} = route.params;
-    console.log(otherParam);
+    const favorited = data.find(v=>v.name===itemID)!=null;
     
     const timeTotal = otherParam.timers.reduce((totalTime, item) => totalTime + item, 0);
-    const timeDisplay = timeTotal>60?(timeTotal/60):timeTotal;
-    const timeUnit = timeTotal>60?"hr":"min";
+    const timeDisplay = Math.round(timeTotal>=60?(timeTotal/60):timeTotal);
+    const timeUnit = timeTotal>=60?"hr":"min";
     return (
-      <SafeAreaView>
+      <SafeAreaView key={otherParam.name}>
           
       <ScrollView>
-        <View className="recipe-detail-image">
-        <Image defaultSource={require("./default_food_img.jpg")} style={{height:180}} source={{
+        <View className="recipe-detail-image" style={styles.imageMask}>
+        <ImageBackground resizeMode="cover" defaultSource={require("./default_food_img.jpg")} style={styles.imageBackground} source={{
           uri: otherParam["imageURL"]}}
           onError={(e)=>{e.target.onerror=null;
-          e.target.src='./default_food_img.jpg'}}/>
+          e.target.src='./default_food_img.jpg'}}>
+            <View className="recipe-favorite-icon" style={styles.floatingIcon}>
+            <TouchableOpacity
+              style={buttons.heart}
+              onPress={() =>( favorited?confirmCancelSave(itemID):saveRecipe(otherParam))}
+              ><Text><FontAwesome name={favorited?"heart":"heart-o"} size={18} color="#111127" /></Text></TouchableOpacity>
+              </View>
+                        </ImageBackground>
         </View>
-        
-      
           <View className="recipe-detial-text" style={styles.recipeDetail}>
-            <View className="recipe-detail-text-title" >
+            <View className="recipe-detail-text-title">
             <Text style={textStyles.recipeTitle}>{otherParam.name}</Text>
+            <View>
+              
+            </View>
             </View>
             <View className="recipeIconRow" style={styles.fixToText}>
           <View style={styles.iconBlock}>
@@ -205,6 +210,7 @@ const App=()=> {
           </View>
 
         </View>
+        
             <View className="ingredients" style={styles.detailBlock}>
             <Text style = {textStyles.itemSubtitle}>Ingredients</Text>
         {otherParam["ingredients"].map((ingredient,index) => (
@@ -236,12 +242,11 @@ const App=()=> {
     );
   };
 
-  
+
 const renderHomeItem = ({item},navigation) => {
-  
-  return (<Item item={item} onPress={()=>navigation.navigate("Details",{
-    itemID:item.name,otherParam:item
-  })}></Item>)
+
+  return (<Item item={item} onPress={()=>(navigation.navigate("Details",{
+      itemID:item.name,otherParam:item}))}></Item>)
   
 
 }

@@ -38,9 +38,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   cardImage: {
+    padding:0,
+    margin:0,
     backgroundColor: "#D8D8D8",
     borderRadius: 15,
-    width:75,
+    width:120,
     height:110,
   },
   cardRecipeTitle: {
@@ -68,6 +70,20 @@ lineHeight: 15,
     flex:1,
     alignItems:"center",
     justifyContent:"center",
+  },
+  imageBackground: {
+    flex: 1,
+  },
+  imageMask: {
+    flex:1,
+    height:150,
+
+  },
+  floatingIcon: {
+    paddingTop:10,
+    paddingHorizontal:10,
+    justifyContent:"flex-end",
+    alignItems:"flex-end",
   }
   });
 
@@ -93,7 +109,7 @@ elevation: 5,
       shadowOpacity: 0.25, // IOS
       shadowRadius: 2, //IOS
       shadowColor:tomato,
-      backgroundColor: '#fff',
+      backgroundColor: 'white',
       borderRadius: 20,
       height: 40,
       width: 40,
@@ -103,6 +119,7 @@ elevation: 5,
      borderWidth: 0,
      borderColor:"#F2DBD5"
      },
+     
   });
   const textStyles = StyleSheet.create({
     itemText:{
@@ -112,6 +129,15 @@ elevation: 5,
 
 
     },
+    textInside: {
+  
+        color: "white",
+        fontSize: 42,
+        lineHeight: 84,
+        fontWeight: "bold",
+        textAlign: "center",
+      
+    },
     ingredientQuantity: {
       fontSize:12,
       color:"grey",
@@ -120,7 +146,7 @@ elevation: 5,
     recipeTitle: {
       fontFamily: "Helvetica",
   fontSize: 16,
-  color: "#111127",
+  color: tomato,
   letterSpacing:1.1,
   textAlign: "center",
   paddingTop:10,
